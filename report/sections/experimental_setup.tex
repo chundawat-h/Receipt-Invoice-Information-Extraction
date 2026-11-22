@@ -13,11 +13,11 @@ BERT and LayoutLM use exactly the same hyperparameters (Table~\ref{tab:hparams})
 \begin{table}[t]
   \centering
   \small
-  \begin{tabular}{@{}p{0.36\linewidth}p{0.58\linewidth}@{}}
+  \begin{tabular}{ll}
     \toprule
     Hyperparameter & Value (both models) \\
     \midrule
-    Pre-trained model   & BERT-base / LayoutLM-base, uncased \\
+    Pre-trained model   & \texttt{bert-base-uncased} / \texttt{microsoft/layoutlm-base-uncased} \\
     Max.\ sequence length & 512 sub-tokens \\
     Optimiser           & AdamW~\cite{loshchilov2019adamw} \\
     Learning rate       & $5 \times 10^{-5}$, linear decay, no warm-up \\
@@ -39,7 +39,7 @@ SROIE has no official validation split, and with only 626 training receipts we d
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{layoutlm_training_loss.png}
+  \includegraphics[width=0.7\linewidth]{layoutlm_training_loss.png}
   \caption{Training loss (log scale) of BERT and LayoutLM, logged every 10 steps, with identical hyperparameters.}
   \label{fig:loss}
 \end{figure}

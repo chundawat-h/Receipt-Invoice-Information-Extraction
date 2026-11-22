@@ -1,0 +1,113 @@
+%**************************************************************************
+%*  Course project report, based on the ELCVIA LaTeX 2e template          *
+%*  (Electronic Letters on Computer Vision and Image Analysis)            *
+%*                                                                        *
+%*  Build: pdflatex main -> bibtex main -> pdflatex main -> pdflatex main *
+%*  The template style file elcvia.sty is in this folder.                 *
+%*  Figures are read from ../results/ (see \graphicspath below).          *
+%**************************************************************************
+
+\documentclass[twoside,a4paper,11pt]{article}
+\usepackage{times}
+\usepackage{elcvia}
+\usepackage[english]{babel}
+
+% Packages used by the report sections (the template's psfig.sty is not needed: figures use graphicx)
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\graphicspath{{../results/}{figures/}}
+
+\newcommand{\Runo}{\rm I\hspace{-0.55ex}R}
+
+% INFORMATION TO FILL IN CAMERA READY VERSION
+%------------------------------------------------------------------
+\newcommand{\vol}{0}            % Number of Volume (default 0)
+\newcommand{\num}{0}            % Number (default 0)
+\setcounter{page}{1}            % First page (default 1)
+\newcommand{\begpag}{\thepage}
+\newcommand{\finpag}{7}         % Last Page  TODO: set to the real last page
+\newcommand{\yearp}{2026}       % Year of the issue
+%------------------------------------------------------------------
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\title{Receipt Information Extraction with Layout-Aware Transformers:\\
+How Much Does Layout Add over Text?
+\footnote[0]{Correspondence to: hiranyapatil10@gmail.com, himanshuchundawat00@gmail.com \vspace{0.2cm}}
+% INFORMATION TO FILL IN CAMERA READY VERSION
+%------------------------------------------------------------------
+% name of Associate Editor given when article is accepted
+\footnote[0]{\noindent Recommended for acceptance by $<$name$>$}
+%------------------------------------------------------------------
+\footnote[0]{ELCVIA ISSN:1577-5097}
+\footnote[0]{Published by Computer Vision Center / Universitat Aut\`onoma de
+Barcelona, Barcelona, Spain}
+}
+
+\author{Hiranya Patil$^*$ and Himanshu Chundawat$^*$ \\ \\
+\centerline{\small \em $^*$ Computer Science (B.Tech), Sitare University, Lucknow, India} \\ \\
+% Submission date (replaces the template's received / revised / accepted dates)
+\centerline{\small Submitted 22 November 2026}
+       }
+
+
+\begin{document}
+
+\maketitle
+
+\pagestyle{myheadings}
+
+% INFORMATION TO FILL IN CAMERA READY VERSION
+%-------------------------------------------------------------------
+% fill in (authors) the authors of article in following format:
+% * 1,2 authors: J. Jones and J. Jones
+% * More than 2 authors: J. Jones et al.
+\markboth{\centerline{\small \it H. Patil and H. Chundawat /
+           Electronic Letters on Computer Vision and Image Analysis
+           \vol(\num):\begpag-\finpag, \yearp}}
+         {\centerline{\small \it H. Patil and H. Chundawat /
+           Electronic Letters on Computer Vision and Image Analysis
+           \vol(\num):\begpag-\finpag, \yearp}}
+%-------------------------------------------------------------------
+\hrulefill
+
+\begin{abstract}
+
+\input{sections/abstract}
+
+\vspace{0.5cm}
+\noindent
+{\em Key Words}: Document Analysis and OCR, Key Information Extraction,
+Receipts, LayoutLM, BERT, Token Classification.
+
+\end{abstract}
+\hrulefill
+
+% ---- chundawat-h ----
+\input{sections/introduction}
+\input{sections/related_work}
+
+% ---- Hiranya ----
+\input{sections/dataset}
+
+\section{Methods}
+\label{sec:methods}
+% ---- chundawat-h ----
+\input{sections/method_regex}
+% ---- Hiranya ----
+\input{sections/method_bert}
+\input{sections/method_layoutlm}
+\input{sections/experimental_setup}
+
+% ---- chundawat-h ----
+\input{sections/results}
+\input{sections/conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
