@@ -1,0 +1,6 @@
+field,Regex,BERT,LayoutLM,layout_gain
+company,68.3,89.31,92.91,3.6
+date,95.79,97.84,98.7,0.86
+address,59.94,91.07,93.66,2.59
+total,75.22,89.37,89.47,0.1
+macro_avg,74.81,91.9,93.69,1.79
