@@ -1,6 +1,7 @@
 transformers
 datasets<3
 torch
+accelerate
 seqeval
 pandas
 matplotlib
