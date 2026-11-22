@@ -1,0 +1,6 @@
+field,precision,recall,f1,correct,predicted,gold
+company,68.3,68.3,68.3,237,347,347
+date,96.49,95.1,95.79,330,342,347
+address,59.94,59.94,59.94,208,347,347
+total,75.22,75.22,75.22,261,347,347
+macro_avg,74.99,74.64,74.81,,,
