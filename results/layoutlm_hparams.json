@@ -1,0 +1,19 @@
+{
+  "model": "microsoft/layoutlm-base-uncased",
+  "max_length": 512,
+  "learning_rate": 5e-05,
+  "epochs": 10,
+  "batch_size": 8,
+  "weight_decay": 0.0,
+  "warmup_steps": 0,
+  "lr_scheduler": "linear",
+  "optimizer": "AdamW (Trainer default)",
+  "fp16": true,
+  "seed": 42,
+  "gpu": "Tesla T4",
+  "train_minutes": 2.5,
+  "train_receipts": 626,
+  "test_receipts": 347,
+  "transformers": "5.22.1",
+  "torch": "2.14.1+cu130"
+}
