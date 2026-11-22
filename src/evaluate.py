@@ -150,7 +150,7 @@ def get_gold(dataset_split, label_names=None):
 
     ``dataset_split`` is a Hugging Face split (or a list of dicts) with
     ``words`` and ``ner_tags``. Receipts are keyed by the ``key`` column
-    (added by ``src.data.load_sroie``); without it, by ``id`` or row index.
+    (added by ``src.data.load_sroie``, from PR #12); without it, by ``id`` or row index.
     """
     names = label_names or _label_names(dataset_split)
     gold = {}
@@ -172,20 +172,25 @@ def receipt_id(row, index=None):
     return str(index)
 
 
-def get_official_gold(split="test", keys=None, official=None):
-    """Official ICDAR answers: ``{receipt_key: {field: string}}``.
+OFFICIAL_DATASET = "jsdnrs/ICDAR2019-SROIE"
 
-    Loads jsdnrs/ICDAR2019-SROIE unless ``official`` (an already loaded split)
-    is given. Pass ``keys`` (e.g. ``test["key"]``) to keep only our receipts.
+
+def get_official_gold(split="test", keys=None):
+    """Official ICDAR answers from jsdnrs/ICDAR2019-SROIE: ``{receipt_key: {field: string}}``.
+
+    Only the ``key`` and ``entities`` columns are streamed, so the ~500 MB of
+    images is not stored (takes about a minute). Pass ``keys`` (e.g.
+    ``test["key"]``) to keep only our receipts; jsdnrs test has 361 receipts,
+    darentang test has 347.
     """
-    if official is None:
-        from src.data import load_official
-        official = load_official(split, with_images=False)
+    from datasets import load_dataset
+
+    rows = load_dataset(OFFICIAL_DATASET, split=split, streaming=True, columns=["key", "entities"])
     keep = set(keys) if keys is not None else None
     gold = {}
-    for key, entities in zip(official["key"], official["entities"]):
-        if keep is None or key in keep:
-            gold[key] = {f: entities.get(f) or "" for f in FIELDS}
+    for row in rows:
+        if keep is None or row["key"] in keep:
+            gold[row["key"]] = {f: row["entities"].get(f) or "" for f in FIELDS}
     if keep is not None and len(gold) != len(keep):
         missing = sorted(keep - set(gold))[:5]
         raise ValueError(f"{len(keep) - len(gold)} keys not in official data, e.g. {missing}")

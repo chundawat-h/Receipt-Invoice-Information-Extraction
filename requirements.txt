@@ -1,8 +1,7 @@
 transformers
-datasets
+datasets<3
 torch
 seqeval
 pandas
 matplotlib
 scikit-learn
-pillow
