@@ -1,0 +1,6 @@
+,exact match %,"exact, ignoring spaces %",mean character similarity
+company,80.403,80.692,0.987
+date,96.254,96.254,0.991
+address,58.213,74.352,0.99
+total,96.254,96.254,0.991
+macro avg,82.781,86.888,0.99
