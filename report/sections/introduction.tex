@@ -1,7 +1,58 @@
-% introduction.tex
-% TODO (chundawat-h): Introduction and problem statement: extracting company, date, address and total from scanned receipts using text and layout.
+% introduction.tex (chundawat-h)
 
 \section{Introduction}
 \label{sec:intro}
 
-\textit{To be written.}
+Receipts and invoices are produced in huge numbers and are needed for
+expense reports, bookkeeping and tax filing. Turning a scanned receipt
+into structured data, such as \emph{who} sold, \emph{when} and for
+\emph{how much}, is still often done by hand. Automating it is a classic
+document-analysis task: an OCR engine first reads the words and their
+positions, and a second step must decide which words belong to which
+field.
+
+The second step is harder than it looks. Receipts have no fixed
+template: each shop places its name, address, date and total
+differently, and the same receipt may print several candidate amounts
+(item prices, subtotal, tax, total before and after rounding, cash
+paid). OCR adds noise on top, for example splitting a number
+(\texttt{39. 80}) or misreading characters (\texttt{SON BHD} for
+\texttt{SDN BHD}).
+
+Two kinds of information can help. The \emph{text} of a word and its
+neighbours tells a model what the word is, while its \emph{layout}, the
+position on the page, tells it where the word sits: company names are
+usually at the top, and the total is usually on the same line as the
+word ``TOTAL''. Pre-trained language models such as
+BERT~\cite{devlin2019bert} use only the text. LayoutLM~\cite{xu2020layoutlm}
+extends BERT with embeddings of each word's 2D bounding box and was
+pre-trained on scanned documents.
+
+\paragraph{Problem statement.} Given the OCR words and bounding boxes of
+a scanned receipt, extract one string for each of four fields:
+\emph{company}, \emph{date}, \emph{address} and \emph{total}.
+
+\paragraph{Research question.} How much does layout information add
+over text alone, and for which fields? We answer this with a field-wise
+$F_1$ comparison of three methods that use the same OCR input:
+\begin{enumerate}
+  \item a rule-based \textbf{regex baseline} (text and line order, no learning);
+  \item \textbf{BERT} token classification (text only);
+  \item \textbf{LayoutLM} token classification (text and 2D position).
+\end{enumerate}
+BERT and LayoutLM have the same size, vocabulary and training settings,
+so the difference between them isolates the effect of the layout input.
+
+\paragraph{Contributions.}
+\begin{itemize}
+  \item A reproducible comparison of rules, a text-only Transformer and a
+        layout-aware Transformer on SROIE, with all code, predictions and
+        notebooks publicly available.
+  \item A field-wise analysis of where layout helps, with a paired
+        bootstrap significance test and error examples: layout fixes
+        block-boundary errors on company and address but does not help
+        the total.
+  \item A two-gold evaluation that separates model errors from OCR
+        errors: even perfect word tagging scores only 82.8\% macro $F_1$
+        against the official answers.
+\end{itemize}
