@@ -1,0 +1,28 @@
+# Model weights / checkpoints (too large for GitHub)
+checkpoints/
+outputs/
+wandb/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data downloads / caches
+data/
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
