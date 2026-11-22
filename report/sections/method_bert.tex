@@ -1,0 +1,26 @@
+% Method 2: BERT (Hiranya, issue #8)
+% Needs: amsmath, amssymb.
+
+\subsection{Method 2: BERT token classification (text only)}
+\label{sec:bert}
+
+We cast extraction as sequence labelling: every OCR word of a receipt receives one of the 9 BIO labels (Section~\ref{sec:dataset}), and the words of each field are then joined into a string. As the text-only model we fine-tune \texttt{bert-base-uncased}~\cite{devlin2019bert} (12 layers, hidden size 768, about 110M parameters).
+
+\paragraph{Input.}
+The OCR words of a receipt are concatenated in the dataset's reading order and tokenised into WordPiece sub-tokens~\cite{wu2016google}, e.g.\ \texttt{25/12/2018} $\rightarrow$ \texttt{25}, \texttt{/}, \texttt{12}, \texttt{/}, \texttt{2018}. The sequence is framed by \texttt{[CLS]} and \texttt{[SEP]} and truncated to 512 sub-tokens. The model sees only the text; the position of a sub-token is just its index in this sequence.
+
+\paragraph{Label alignment.}
+Labels are defined per word, but the model predicts per sub-token. As is standard for BERT~\cite{devlin2019bert}, only the \emph{first} sub-token of each word carries the word's label. All other sub-tokens and the special tokens receive the ignore index, so they do not contribute to the loss.
+
+\paragraph{Model and loss.}
+A linear layer on top of the final hidden state $\mathbf{h}_t \in \mathbb{R}^{768}$ of each sub-token $t$ produces a distribution over the $K=9$ labels,
+\begin{equation}
+  p(y_t \mid \text{receipt}) = \operatorname{softmax}\!\left(\mathbf{W}\mathbf{h}_t + \mathbf{b}\right), \qquad \mathbf{W} \in \mathbb{R}^{K \times 768},
+\end{equation}
+and the whole network is fine-tuned with the cross-entropy loss averaged over the labelled sub-tokens $\mathcal{T}$ (the first sub-token of each word):
+\begin{equation}
+  \mathcal{L} = -\frac{1}{|\mathcal{T}|} \sum_{t \in \mathcal{T}} \log p(y_t^{*} \mid \text{receipt}).
+\end{equation}
+
+\paragraph{From predictions to fields.}
+At test time each word takes the label predicted for its first sub-token, and words removed by truncation are labelled \texttt{O}. This gives one label per word, in the same format as the gold tags. The words of each field are grouped into spans (a \texttt{B-} tag, or an \texttt{I-} tag that does not continue the current field, starts a new span), and the spans are joined with spaces into one string per field. The same conversion is applied to the gold tags, so the predictions and the main gold standard are built in exactly the same way.
