@@ -1,4 +1,19 @@
-% abstract.tex
-% TODO (chundawat-h): Abstract (3-5 sentences: task, dataset, three methods, main result: how much layout adds).
+% abstract.tex (chundawat-h)
 
-\textit{To be written.}
+Scanned receipts are a common business document, yet their key fields
+are still often typed in by hand. We study the extraction of four fields
+(company, date, address and total) from the SROIE (ICDAR 2019) receipt
+dataset and ask how much the 2D position of words on the page adds over
+their text alone. On the same OCR output we compare three methods: a
+hand-written regular-expression baseline, a text-only BERT token
+classifier, and LayoutLM, which adds 2D position embeddings of each
+word's bounding box to the BERT input and is otherwise trained
+identically. Scored with field-level exact-match $F_1$ on 347 test
+receipts, the rules reach a macro $F_1$ of 74.8\%, BERT 91.9\% and
+LayoutLM 93.7\%. Layout therefore adds 1.8 points (paired-bootstrap 95\%
+CI [0.5, 3.2]). The gain comes from company ($+3.6$) and address
+($+2.6$), whose extent on the page is visual, and is zero for the total,
+whose training labels often mark a copy of the amount away from the
+``TOTAL'' line. Against the official answers, OCR noise caps any tagging
+model at 82.8\% macro $F_1$, and LayoutLM comes within 1.2 points of
+this ceiling on date and address.

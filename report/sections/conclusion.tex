@@ -1,7 +1,31 @@
-% conclusion.tex
-% TODO (chundawat-h): Conclusion: how much layout adds over text alone.
+% conclusion.tex (chundawat-h)
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-\textit{To be written.}
+We compared a rule-based baseline, a text-only Transformer (BERT) and a
+layout-aware Transformer (LayoutLM) for extracting company, date,
+address and total from scanned receipts. Rules already solve dates
+(95.8\% $F_1$) but struggle with fields whose position and wording vary,
+reaching 74.8\% macro $F_1$. A fine-tuned text-only BERT raises this to
+91.9\%, and adding the 2D word positions (LayoutLM) to 93.7\%.
+
+So, to answer our research question, layout adds a small but
+statistically reliable 1.8 points over text alone. The gain is
+concentrated on company ($+3.6$) and address ($+2.6$), whose extent on
+the page is defined visually. It is absent for the total, where the
+training labels do not consistently mark the amount on the ``TOTAL''
+line. Most of the improvement over rules comes from contextual text
+features; layout mainly fixes block-boundary errors. Our two-gold
+evaluation further shows that OCR noise, not the tagging model, is the
+main limit on company and address: even perfect tagging reaches only
+80.4\% and 58.2\% against the official answers.
+
+\paragraph{Limitations and future work.} Each model was trained once
+(seed 42); the bootstrap covers test-set sampling but not training
+randomness, so several seeds would make the per-field gains more
+reliable. Natural next steps are re-labelling the total on the
+``TOTAL'' line to give layout a consistent signal, models that also use
+the image (LayoutLMv2~\cite{xu2021layoutlmv2}), OCR post-correction to
+raise the ceiling, and evaluation on other receipt datasets such as
+CORD~\cite{park2019cord}.

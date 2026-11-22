@@ -1,7 +1,38 @@
-% related_work.tex
-% TODO (chundawat-h): Related work: BERT (devlin2019bert), LayoutLM (xu2020layoutlm), SROIE (huang2019sroie); keys are in references.bib.
+% related_work.tex (chundawat-h)
 
 \section{Related work}
 \label{sec:related}
 
-\textit{To be written.}
+\paragraph{Receipt and form understanding.} The ICDAR 2019 Robust
+Reading Challenge on Scanned Receipts OCR and Information Extraction
+(SROIE)~\cite{huang2019sroie} introduced a public benchmark of about
+1{,}000 scanned receipts with three tasks: text localisation, OCR, and
+key information extraction of company, date, address and total.
+CORD~\cite{park2019cord} provides a larger receipt dataset with more
+fine-grained labels. Before Transformers, such fields were usually
+extracted with hand-crafted rules and templates, which work well for
+fixed layouts but break on unseen ones.
+
+\paragraph{Sequence labelling.} Key information extraction is commonly
+framed as named-entity-style token classification with BIO
+tags~\cite{ramshaw1995text}: each word is labelled as the Beginning or
+Inside of a field, or Outside any field. Neural taggers such as the
+BiLSTM-CRF~\cite{lample2016ner} became the standard approach and were
+later replaced by fine-tuned Transformers~\cite{vaswani2017attention}.
+
+\paragraph{Pre-trained language models.} BERT~\cite{devlin2019bert} is a
+Transformer encoder pre-trained on large text corpora with masked
+language modelling. Adding a classification layer and fine-tuning on
+labelled tokens gives strong results on entity recognition. However,
+BERT reads a document as a 1D sequence and cannot see where a word is on
+the page.
+
+\paragraph{Layout-aware models.} Chargrid~\cite{katti2018chargrid}
+encodes a document as a 2D grid of characters for a convolutional
+network. LayoutLM~\cite{xu2020layoutlm} keeps the BERT architecture and
+adds 2D position embeddings of each word's bounding box. It was
+pre-trained on 11 million scanned document pages and reported large
+gains over BERT on form understanding and on SROIE.
+LayoutLMv2~\cite{xu2021layoutlmv2} further adds visual features from the
+page image. We use LayoutLM (v1) because it differs from BERT
+\emph{only} in the layout input, which makes the comparison clean.

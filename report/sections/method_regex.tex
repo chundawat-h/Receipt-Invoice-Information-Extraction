@@ -1,7 +1,42 @@
-% method_regex.tex
-% TODO (chundawat-h): Method 1: rule-based baseline (src/regex_baseline.py, notebook 02).
+% method_regex.tex (chundawat-h)
+
+All three methods take the same input, the OCR words of a receipt in
+reading order with their bounding boxes, and produce one string per
+field.
 
 \subsection{Method 1: OCR + regex baseline}
 \label{sec:regex}
 
-\textit{To be written.}
+The baseline uses no learning (code in \texttt{src/regex\_baseline.py},
+notebook \texttt{02\_regex\_baseline.ipynb}). It first rebuilds text
+lines from the OCR words: a new line starts when a word's top edge moves
+by more than half the previous word's height, or when the next word
+jumps back to the left. It then applies one hand-written rule set per
+field:
+
+\begin{description}
+  \item[Date:] the first match of a set of date patterns, e.g.\
+        \texttt{25/12/2018}, \texttt{12-01-19}, \texttt{2018-12-25} and
+        \texttt{25 Dec 2018}.
+  \item[Total:] amounts (numbers with two decimals) on lines containing
+        ``TOTAL'', ``NETT'', ``GRAND'' or ``AMOUNT DUE'', excluding
+        subtotal, tax, quantity and change lines, and skipping
+        tax-summary rows that hold two different amounts. A total after
+        a ``Rounding'' line wins; otherwise lines such as ``Total Incl.\
+        GST'' or ``Total Rounded'' are preferred, and a rounding
+        adjustment below a plain total is applied. If no such line
+        exists, the largest amount on the receipt is used.
+  \item[Company:] the first line among the top eight that contains a
+        company keyword (\texttt{SDN BHD}, \texttt{ENTERPRISE},
+        \texttt{TRADING}, \texttt{RESTAURANT}, \ldots), joined with the
+        previous line if it holds only ``SDN BHD'' and with the next one
+        if it ends in ``\&''. Store codes and registration numbers at
+        either end are removed.
+  \item[Address:] the lines after the company, skipping registration
+        numbers, up to and including the line with a five-digit
+        postcode, plus a short state-name line right after it; phone,
+        GST and invoice lines stop the address.
+\end{description}
+
+The rules were developed by inspecting errors on the \emph{training}
+split only; the test split was used once, for the final score.
