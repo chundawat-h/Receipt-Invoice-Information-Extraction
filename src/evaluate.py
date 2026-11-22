@@ -1,10 +1,20 @@
 """Shared field-level evaluation for all methods (Regex, BERT, LayoutLM).
 
-Every method saves its predictions as ``results/<method>_preds.json``::
+Every method saves its predictions as ``results/<method>_preds.json``, keyed
+by the receipt key (image file name without extension, ``row["key"]``)::
 
-    {"receipt_id": {"company": "...", "date": "...", "address": "...", "total": "..."}}
+    {"X51005230621": {"company": "...", "date": "...", "address": "...", "total": "..."}}
 
 A missing field or an empty string means "no prediction" for that field.
+
+Two gold standards (report both):
+
+* ``get_gold(split)`` - **main score**. Gold strings rebuilt from the
+  darentang word tags, i.e. what a perfect tagger could output from the OCR.
+* ``get_official_gold(split, keys)`` - **second score**. The official ICDAR
+  answers from jsdnrs/ICDAR2019-SROIE. Even a perfect tagger cannot reach 100 %
+  here, because of OCR noise; ``evaluate(get_gold(test), official)`` gives that
+  ceiling.
 
 Scoring (per field): after normalisation, a prediction is correct only if it
 exactly matches the gold string.
@@ -13,25 +23,27 @@ exactly matches the gold string.
     recall    = correct / receipts with a non-empty gold value
     f1        = 2 * P * R / (P + R)
 
-Usage (in a notebook, from the repo root or with ``sys.path.append("..")``)::
+Usage (in a notebook, from the repo root)::
 
-    from datasets import load_dataset
-    from src.evaluate import get_gold, bio_to_fields, evaluate, compare, save_preds
+    from src.data import load_sroie
+    from src.evaluate import get_gold, get_official_gold, bio_to_fields, evaluate, compare, save_preds
 
-    test = load_dataset("darentang/sroie", split="test")
-    gold = get_gold(test)
+    test = load_sroie()["test"]
+    gold = get_gold(test)                                   # main
+    official = get_official_gold("test", keys=test["key"])  # second
 
-    # Regex baseline: build {receipt_id: {field: string}} directly.
+    # Regex baseline: build {key: {field: string}} directly.
     # BERT / LayoutLM: turn word-level label predictions into fields:
-    preds = {rid: bio_to_fields(words, word_labels) for rid, words, word_labels in ...}
+    preds = {row["key"]: bio_to_fields(row["words"], word_labels) for row, word_labels in ...}
 
     save_preds(preds, "results/bert_preds.json")
     print(evaluate(preds, gold))
+    print(evaluate(preds, official))
 
     # Issue #7 - one table comparing all methods (F1 per field):
     print(compare({"Regex": regex_preds, "BERT": bert_preds, "LayoutLM": lm_preds}, gold))
 
-Command line (needs ``datasets`` installed)::
+Command line::
 
     python -m src.evaluate results/regex_preds.json results/bert_preds.json
 """
@@ -134,12 +146,11 @@ def _label_names(dataset_split):
 
 
 def get_gold(dataset_split, label_names=None):
-    """Build ``{receipt_id: {field: string}}`` from a labelled split.
+    """Build ``{receipt_key: {field: string}}`` from a labelled split.
 
     ``dataset_split`` is a Hugging Face split (or a list of dicts) with
-    ``words`` and ``ner_tags``. Receipt ids come from the ``id`` column when
-    present, otherwise from the row index, always as strings so they match the
-    JSON keys.
+    ``words`` and ``ner_tags``. Receipts are keyed by the ``key`` column
+    (added by ``src.data.load_sroie``); without it, by ``id`` or row index.
     """
     names = label_names or _label_names(dataset_split)
     gold = {}
@@ -149,8 +160,35 @@ def get_gold(dataset_split, label_names=None):
             if names is None:
                 raise ValueError("ner_tags are integers: pass label_names=[...]")
             tags = [names[t] for t in tags]
-        rid = str(row["id"]) if "id" in row else str(i)
-        gold[rid] = bio_to_fields(row["words"], tags)
+        gold[receipt_id(row, i)] = bio_to_fields(row["words"], tags)
+    return gold
+
+
+def receipt_id(row, index=None):
+    """The key predictions are stored under: ``key``, else ``id``, else index."""
+    for column in ("key", "id"):
+        if column in row:
+            return str(row[column])
+    return str(index)
+
+
+def get_official_gold(split="test", keys=None, official=None):
+    """Official ICDAR answers: ``{receipt_key: {field: string}}``.
+
+    Loads jsdnrs/ICDAR2019-SROIE unless ``official`` (an already loaded split)
+    is given. Pass ``keys`` (e.g. ``test["key"]``) to keep only our receipts.
+    """
+    if official is None:
+        from src.data import load_official
+        official = load_official(split, with_images=False)
+    keep = set(keys) if keys is not None else None
+    gold = {}
+    for key, entities in zip(official["key"], official["entities"]):
+        if keep is None or key in keep:
+            gold[key] = {f: entities.get(f) or "" for f in FIELDS}
+    if keep is not None and len(gold) != len(keep):
+        missing = sorted(keep - set(gold))[:5]
+        raise ValueError(f"{len(keep) - len(gold)} keys not in official data, e.g. {missing}")
     return gold
 
 
@@ -222,12 +260,18 @@ def load_preds(path):
 
 
 def main(paths):
-    from datasets import load_dataset
+    from src.data import load_sroie
 
-    gold = get_gold(load_dataset("darentang/sroie", split="test"))
+    test = load_sroie()["test"]
+    golds = {
+        "main gold (darentang tags)": get_gold(test),
+        "official ICDAR answers": get_official_gold("test", keys=test["key"]),
+    }
     for path in paths:
-        print(f"\n=== {path} ===")
-        print(evaluate(load_preds(path), gold).to_string())
+        preds = load_preds(path)
+        for name, gold in golds.items():
+            print(f"\n=== {path} vs {name} ===")
+            print(evaluate(preds, gold).to_string())
 
 
 if __name__ == "__main__":
