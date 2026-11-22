@@ -1,0 +1,10 @@
+              precision    recall  f1-score   support
+
+     ADDRESS     0.8654    0.9078    0.8861       347
+     COMPANY     0.8802    0.9107    0.8952       347
+        DATE     0.9633    0.9827    0.9729       347
+       TOTAL     0.7983    0.8329    0.8152       347
+
+   micro avg     0.8763    0.9085    0.8921      1388
+   macro avg     0.8768    0.9085    0.8923      1388
+weighted avg     0.8768    0.9085    0.8923      1388
