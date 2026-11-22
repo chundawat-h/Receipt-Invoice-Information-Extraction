@@ -24,32 +24,37 @@
 
 \newcommand{\Runo}{\rm I\hspace{-0.55ex}R}
 
-% INFORMATION TO FILL IN CAMERA READY VERSION
-%------------------------------------------------------------------
-\newcommand{\vol}{0}            % Number of Volume (default 0)
-\newcommand{\num}{0}            % Number (default 0)
-\setcounter{page}{1}            % First page (default 1)
-\newcommand{\begpag}{\thepage}
-\newcommand{\finpag}{7}         % Last Page  TODO: set to the real last page
-\newcommand{\yearp}{2026}       % Year of the issue
-%------------------------------------------------------------------
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+% This is a course report, not an ELCVIA article: elcvia.sty's title block
+% prints the journal line "Electronic Letters on Computer Vision and Image
+% Analysis vol(num):pages, year". Keep its layout, but print a course line.
+\makeatletter
+\def\@maketitle{%
+  \newpage
+  \thispagestyle{empty}%
+  \begin{center}{\small\it Deep Learning Course Project Report, 2026}\end{center}
+  \vskip 2em
+  \begin{center}
+    {\LARGE\bf \@title \par}
+    \vskip 1.5em
+    {\large \lineskip .5em
+    \begin{tabular}[t]{c}
+       \@author
+    \end{tabular}\par}
+  \end{center}
+  \par}
+\makeatother
 
 \title{Receipt Information Extraction with Layout-Aware Transformers:\\
 How Much Does Layout Add over Text?
 \footnote[0]{Correspondence to: hiranyapatil10@gmail.com, himanshuchundawat00@gmail.com \vspace{0.2cm}}
-% INFORMATION TO FILL IN CAMERA READY VERSION
-%------------------------------------------------------------------
-% name of Associate Editor given when article is accepted
-\footnote[0]{\noindent Recommended for acceptance by $<$name$>$}
-%------------------------------------------------------------------
-\footnote[0]{ELCVIA ISSN:1577-5097}
-\footnote[0]{Published by Computer Vision Center / Universitat Aut\`onoma de
-Barcelona, Barcelona, Spain}
+\footnote[0]{Code: \url{https://github.com/chundawat-h/Receipt-Invoice-Information-Extraction}}
 }
 
 \author{Hiranya Patil$^*$ and Himanshu Chundawat$^*$ \\ \\
-\centerline{\small \em $^*$ Computer Science (B.Tech), Sitare University, Lucknow, India} \\ \\
+\centerline{\small \em $^*$ Computer Science (B.Tech), Sitare University, Lucknow, India} \\
+\centerline{\small Hiranya Patil (202410101200058), Himanshu Chundawat (202410101200056)} \\ \\
 % Submission date (replaces the template's received / revised / accepted dates)
 \centerline{\small Submitted 22 November 2026}
        }
@@ -61,18 +66,11 @@ Barcelona, Barcelona, Spain}
 
 \pagestyle{myheadings}
 
-% INFORMATION TO FILL IN CAMERA READY VERSION
-%-------------------------------------------------------------------
-% fill in (authors) the authors of article in following format:
-% * 1,2 authors: J. Jones and J. Jones
-% * More than 2 authors: J. Jones et al.
+% Running header (ELCVIA style: authors / short title)
 \markboth{\centerline{\small \it H. Patil and H. Chundawat /
-           Electronic Letters on Computer Vision and Image Analysis
-           \vol(\num):\begpag-\finpag, \yearp}}
+           Receipt Information Extraction with Layout-Aware Transformers}}
          {\centerline{\small \it H. Patil and H. Chundawat /
-           Electronic Letters on Computer Vision and Image Analysis
-           \vol(\num):\begpag-\finpag, \yearp}}
-%-------------------------------------------------------------------
+           Receipt Information Extraction with Layout-Aware Transformers}}
 \hrulefill
 
 \begin{abstract}
