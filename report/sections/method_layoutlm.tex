@@ -1,0 +1,67 @@
+% Method 3: LayoutLM (Hiranya, issue #8)
+% Needs: amsmath, amssymb, tikz with \usetikzlibrary{arrows.meta}, graphicx (for \resizebox).
+
+\subsection{Method 3: LayoutLM (text + 2D layout)}
+\label{sec:layoutlm}
+
+LayoutLM~\cite{xu2020layoutlm} extends BERT with the position of each token on the page. A receipt is not free text: the company name is at the top, the date follows a ``Date:'' label on the same line, and the total sits at the right end of the line that says ``TOTAL''. LayoutLM can use these cues, while BERT only knows the order of the words. We fine-tune \texttt{microsoft/layoutlm-base-uncased}, which has the same architecture and size as BERT-base (12 layers, hidden size 768) and the same uncased WordPiece vocabulary. It was initialised from BERT-base and then pre-trained on about 11 million scanned document pages from the IIT-CDIP collection, where it learned to predict masked words from their text and layout context~\cite{xu2020layoutlm}.
+
+\paragraph{Text and 2D position embeddings.}
+Each word $w$ comes with a bounding box $(x_0, y_0, x_1, y_1)$ on a $0$--$1000$ grid, where $(x_0, y_0)$ is the top-left and $(x_1, y_1)$ the bottom-right corner. Every sub-token inherits the box of its word. LayoutLM adds 2D position embeddings to BERT's input embedding of sub-token $t$:
+\begin{equation}
+\begin{aligned}
+  \mathbf{e}_t ={}& \mathbf{E}_{\text{tok}}[w_t] + \mathbf{E}_{\text{pos}}[t] + \mathbf{E}_{\text{seg}}[0] \\
+  &+ \mathbf{E}_{x}[x_0] + \mathbf{E}_{y}[y_0] + \mathbf{E}_{x}[x_1] + \mathbf{E}_{y}[y_1] \\
+  &+ \mathbf{E}_{h}[y_1 - y_0] + \mathbf{E}_{w}[x_1 - x_0].
+\end{aligned}
+\end{equation}
+The first line is BERT's input embedding (token, 1D position and segment). The other two lines are the 2D position embeddings added by LayoutLM: $\mathbf{E}_{x}$ and $\mathbf{E}_{y}$ are learned tables for horizontal and vertical coordinates (shared between the two corners), and $\mathbf{E}_{h}$, $\mathbf{E}_{w}$ embed the box height and width. The sum is normalised and passed through the same Transformer encoder as in BERT, so self-attention can relate words by both their meaning and their position on the receipt. The special tokens get fixed boxes: \texttt{[CLS]} $\rightarrow (0,0,0,0)$, \texttt{[SEP]} $\rightarrow (1000,1000,1000,1000)$, and padding $\rightarrow (0,0,0,0)$. Figure~\ref{fig:layoutlm} shows the input for three words of the example receipt.
+
+The original paper also proposes adding image features from a Faster R-CNN for some tasks~\cite{xu2020layoutlm}. We do not use them: our LayoutLM receives exactly the same words and labels as BERT plus the boxes, so the difference between the two models measures the contribution of layout alone.
+
+\paragraph{Training and prediction.}
+Everything else is identical to BERT (Section~\ref{sec:bert}): the same 9-label linear classifier on each final hidden state, the same first-sub-token label alignment and cross-entropy loss, the same truncation to 512 sub-tokens, and the same conversion from word labels to field strings. The boxes are padded together with the text, using $(0,0,0,0)$ for padding positions.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      emb/.style={draw, rounded corners=2pt, minimum width=2.8cm, minimum height=0.55cm, align=center, inner sep=2pt},
+      textemb/.style={emb, fill=blue!12},
+      posemb/.style={emb, fill=gray!18},
+      boxemb/.style={emb, fill=orange!25, minimum height=0.75cm},
+      wide/.style={draw, rounded corners=2pt, minimum width=9.4cm, align=center},
+      arr/.style={-{Stealth[length=2mm]}, thick},
+    ]
+    % ---- input words and their boxes (receipt X00016469612) ----
+    \node at (0,0)   {\texttt{Date}};
+    \node at (3.3,0) {\texttt{:}};
+    \node at (6.6,0) {\texttt{25/12/2018}};
+    \node[font=\scriptsize] at (0,-0.45)   {$(105, 368, 185, 384)$};
+    \node[font=\scriptsize] at (3.3,-0.45) {$(192, 368, 209, 384)$};
+    \node[font=\scriptsize] at (6.6,-0.45) {$(352, 365, 539, 384)$};
+    % ---- embeddings, summed per token ----
+    \foreach \x in {0, 3.3, 6.6} {
+      \draw[arr] (\x,0.25) -- (\x,0.72);
+      \node[textemb] at (\x,1.0)  {token embedding};
+      \node at (\x,1.45) {$+$};
+      \node[posemb]  at (\x,1.9)  {1D position $t$};
+      \node at (\x,2.35) {$+$};
+      \node[boxemb]  at (\x,2.85) {2D position\\[-1pt]{\scriptsize $x_0, y_0, x_1, y_1, w, h$}};
+      \draw[arr] (\x,3.23) -- (\x,3.75);
+      \draw[arr] (\x,4.55) -- (\x,4.98);
+      \draw[arr] (\x,5.57) -- (\x,5.95);
+    }
+    % ---- shared encoder and classifier ----
+    \node[wide, minimum height=0.8cm, fill=green!10] at (3.3,4.15) {Transformer encoder (12 layers, hidden size 768)};
+    \node[wide, minimum height=0.55cm] at (3.3,5.28) {Linear layer + softmax over 9 BIO labels};
+    % ---- outputs ----
+    \node at (0,6.2)   {\texttt{O}};
+    \node at (3.3,6.2) {\texttt{O}};
+    \node at (6.6,6.2) {\texttt{B-DATE}};
+  \end{tikzpicture}%
+  }
+  \caption{LayoutLM input for three words of the receipt in Figure~\ref{fig:receipt}, with their boxes on the $0$--$1000$ grid. Each token's input is the sum of its token, 1D position and 2D position embeddings. BERT is the same model without the orange 2D position embedding. For simplicity one token per word is shown; in practice \texttt{25/12/2018} is split into five sub-tokens that all share the word's box, and only the first one is labelled.}
+  \label{fig:layoutlm}
+\end{figure}
